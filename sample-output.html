@@ -1,0 +1,998 @@
+<h1>UK Sponsor Directory: A Comprehensive Technical Case Study</h1>
+
+<hr />
+
+<h2>Project Title</h2>
+<h3>UK Sponsor Directory &mdash; AI-Powered Sponsor Register Management Platform</h3>
+
+<h2>Summary</h2>
+<p>A full-stack Laravel 13 platform for importing, managing, and analysing the Home Office Register of Licensed Sponsors &mdash; a dataset of more than 143,000 organisations. It features real-time CSV import progress, MD5 checksum change detection, company contact enrichment, and a data-grounded AI assistant powered by a locally hosted Ollama model, all containerised with Docker.</p>
+
+<h2>Published Date</h2>
+<p>July 2026</p>
+
+<hr />
+
+<h1>Technical Case Study</h1>
+
+<h2>Table of Contents</h2>
+<ol>
+  <li><a href="#1-executive-summary">Executive Summary</a></li>
+  <li><a href="#2-problem-statement">Problem Statement</a></li>
+  <li><a href="#3-technology-stack--architecture">Technology Stack &amp; Architecture</a></li>
+  <li><a href="#4-system-design">System Design</a></li>
+  <li><a href="#5-implementation-details">Implementation Details</a></li>
+  <li><a href="#6-ai-integration">AI Integration</a></li>
+  <li><a href="#7-implementation-challenges--overcomes">Implementation Challenges &amp; Overcomes</a></li>
+  <li><a href="#8-testing--quality-assurance">Testing &amp; Quality Assurance</a></li>
+  <li><a href="#9-deployment-strategy">Deployment Strategy</a></li>
+  <li><a href="#10-results--impact">Results &amp; Impact</a></li>
+  <li><a href="#11-lessons-learned">Lessons Learned</a></li>
+  <li><a href="#12-future-roadmap">Future Roadmap</a></li>
+</ol>
+
+<hr />
+
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+
+<p>The Home Office publishes its Register of Licensed Sponsors as a monthly CSV release &mdash; a raw, 140,000+ row flat file with no search, no change tracking, and no user interface. This case study presents the design, development, and deployment of a <strong>UK Sponsor Directory</strong> that turns that static spreadsheet into a searchable, change-aware, AI-assisted business platform.</p>
+
+<p>The system was built using <strong>Laravel 13</strong> (PHP 8.5), containerised with <strong>Docker Compose</strong>, backed by <strong>PostgreSQL 16</strong>, and integrated with <strong>Ollama</strong> for a private, local AI assistant. It serves six distinct audiences: immigration &amp; compliance teams, recruitment agencies, HR departments, business development teams, data analysts, and policy researchers.</p>
+
+<p>The platform ingests large CSV exports with a live two-phase progress bar, automatically detects changes between monthly releases using per-row MD5 checksums, maintains editable contact records, and augments the experience with a <strong>data-grounded AI assistant</strong> &mdash; a conversational interface whose answers are anchored in live dataset statistics through context-augmented generation (CAG) rather than retrieval-augmented generation (RAG).</p>
+
+<hr />
+
+<h2 id="2-problem-statement">2. Problem Statement</h2>
+
+<h3>2.1 Background</h3>
+
+<p>The Home Office updates its Register of Licensed Sponsors roughly once a month. While the data is public and authoritative, anyone who relies on it faces critical operational problems:</p>
+
+<ul>
+  <li><strong>No Interface:</strong> A 140,000+ row flat CSV with no search, filtering, or browsing &mdash; unusable by non-technical staff</li>
+  <li><strong>No Change Visibility:</strong> Monthly releases arrive silently; spotting which organisations were added, removed, or altered requires manually diffing enormous files</li>
+  <li><strong>No Contact Data:</strong> The register contains no website, phone, or HR email, which users must otherwise maintain separately in spreadsheets</li>
+  <li><strong>No Analytics:</strong> Questions such as &ldquo;how many sponsors are in London?&rdquo; or &ldquo;which routes are most common?&rdquo; require technical SQL skills</li>
+  <li><strong>Manual, Error-Prone Workflows:</strong> Without automation, keeping track of changes month to month is impractical</li>
+</ul>
+
+<h3>2.2 Project Objectives</h3>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr style="background-color: #f2f2f2;">
+      <th>Objective</th>
+      <th>Metric</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>One-click CSV import with live feedback</td>
+      <td>Real-time upload + processing progress</td>
+    </tr>
+    <tr>
+      <td>Automatic change detection between releases</td>
+      <td>100% rows classified new/updated/unchanged/removed</td>
+    </tr>
+    <tr>
+      <td>Searchable company management</td>
+      <td>Name search, change-type filter, pagination</td>
+    </tr>
+    <tr>
+      <td>Contact enrichment</td>
+      <td>Editable website / HR phone / HR email</td>
+    </tr>
+    <tr>
+      <td>Data-grounded AI assistant</td>
+      <td>Answers from live dataset statistics (CAG)</td>
+    </tr>
+    <tr>
+      <td>Containerised deployment</td>
+      <td>One-command Docker setup</td>
+    </tr>
+    <tr>
+      <td>Large-file performance</td>
+      <td>140K+ rows imported with batch inserts</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+
+<h2 id="3-technology-stack--architecture">3. Technology Stack &amp; Architecture</h2>
+
+<h3>3.1 Technology Selection</h3>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr style="background-color: #f2f2f2;">
+      <th>Layer</th>
+      <th>Technology</th>
+      <th>Rationale</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Backend</td>
+      <td>Laravel 13 (PHP 8.5)</td>
+      <td>Eloquent ORM, validation, service container, queue-ready</td>
+    </tr>
+    <tr>
+      <td>Frontend</td>
+      <td>Blade Templates + Tailwind CSS (CDN) + vanilla JS</td>
+      <td>Server-side rendering for speed, utility-first CSS for rapid UI</td>
+    </tr>
+    <tr>
+      <td>Database</td>
+      <td>PostgreSQL 16</td>
+      <td>ACID compliance, JSON columns, relational integrity</td>
+    </tr>
+    <tr>
+      <td>AI/ML</td>
+      <td>Ollama (tinyllama)</td>
+      <td>Local processing &mdash; data never leaves the environment</td>
+    </tr>
+    <tr>
+      <td>Web Server</td>
+      <td>Nginx</td>
+      <td>Reverse proxy and static asset serving</td>
+    </tr>
+    <tr>
+      <td>Containerization</td>
+      <td>Docker + Docker Compose</td>
+      <td>Consistent environments, one-command deployment</td>
+    </tr>
+    <tr>
+      <td>Testing</td>
+      <td>PHPUnit 11</td>
+      <td>Laravel-native testing framework</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>3.2 System Architecture</h3>
+
+<pre style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto;">
++---------------------------------------------------------------+
+|                        Client Layer                            |
+|  +----------+  +----------+  +----------+  +----------+      |
+|  |  Import  |  | Company  |  |   AI     |  |  Adminer |      |
+|  |  Upload  |  |  Browse  |  |   Chat   |  |  (DB GUI)|      |
+|  +----------+  +----------+  +----------+  +----------+      |
++---------------------------------------------------------------+
+                           |
+                           v
++---------------------------------------------------------------+
+|                     Application Layer                          |
+|  +-------------------------------------------------------+    |
+|  |                Laravel 13 Framework                   |    |
+|  |  +------------+  +-----------+  +---------+          |    |
+|  |  | Controllers |  | Services  |  | Models  |          |    |
+|  |  |  (3)       |  |  (2)      |  |  (4)    |          |    |
+|  |  +------------+  +-----------+  +---------+          |    |
+|  +-------------------------------------------------------+    |
+|                          |                                    |
+|  +-------------------------------------------------------+    |
+|  |              OllamaService (HTTP Client)              |    |
+|  |  +----------+  +----------+  +----------+            |    |
+|  |  | Chat API |  |  Pull    |  |  Models  |            |    |
+|  |  | /api/chat|  | /api/pull|  | /api/tags|            |    |
+|  +-------------------------------------------------------+    |
++---------------------------------------------------------------+
+                           |
+                           v
++---------------------------------------------------------------+
+|                        Data Layer                              |
+|  +------------+  +------------+  +------------+             |
+|  | PostgreSQL |  |   Ollama   |  |  Adminer   |             |
+|  |    16      |  |  (Local)   |  |            |             |
+|  | Port: 5433 |  | Port: 11434|  | Port: 8031 |             |
+|  +------------+  +------------+  +------------+             |
++---------------------------------------------------------------+
+</pre>
+
+<h3>3.3 Docker Orchestration</h3>
+
+<pre style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto;">
+# docker-compose.yml services
+services:
+  app:        # Laravel application (PHP-FPM)
+  nginx:      # Web server (port 8030)
+  postgres:   # PostgreSQL 16 database (port 5433)
+  adminer:    # Database management GUI (port 8031)
+  ollama:     # AI engine (port 11434)
+</pre>
+
+<hr />
+
+<h2 id="4-system-design">4. System Design</h2>
+
+<h3>4.1 Database Schema</h3>
+
+<p>The system uses 6 normalized tables with proper relationships:</p>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr style="background-color: #f2f2f2;">
+      <th>Table</th>
+      <th>Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>users</code></td>
+      <td>Framework default users table</td>
+    </tr>
+    <tr>
+      <td><code>csv_imports</code></td>
+      <td>Import records with filename, file MD5 checksum, total rows, per-category counts, JSON summary, status, and progress (0&ndash;100)</td>
+    </tr>
+    <tr>
+      <td><code>companies</code></td>
+      <td>Sponsor records: organisation name, town/city, county, type &amp; rating, route, editable contact fields, per-row MD5 checksum, import link, and change type</td>
+    </tr>
+    <tr>
+      <td><code>chat_messages</code></td>
+      <td>Per-session AI conversation history (role, content, model)</td>
+    </tr>
+    <tr>
+      <td><code>cache</code> / <code>jobs</code></td>
+      <td>Framework default cache and job queues</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>4.2 Entity Relationships</h3>
+
+<pre style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto;">
+csv_imports -----< companies        // every company links to the import that produced it
+companies  ------- csv_checksum       // per-row MD5 for change detection
+chat_messages     session_id (index)  // cookie-scoped conversation history
+</pre>
+
+<h3>4.3 Change Detection Logic</h3>
+
+<p>Each import computes a file-level checksum (<code>md5_file</code>) to find the previous comparable import, and a per-row checksum (<code>md5(json)</code>) for every record. Rows are then classified:</p>
+
+<pre style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto;">
+if row checksum exists in previous import      -> change_type = 'unchanged'
+else if organisation name already exists       -> change_type = 'updated'
+else                                           -> change_type = 'new'
+Rows from the previous import missing now      -> deleted (change_type 'removed' via diff)
+</pre>
+
+<h3>4.4 AI Context Injection</h3>
+
+<p>Rather than retrieval (RAG), the assistant uses <strong>context-augmented generation (CAG)</strong>: every request builds a live summary &mdash; total company count, breakdowns by route and type/rating, recent change counts, and 3 sample records &mdash; and injects it into the model&rsquo;s system prompt. Answers are therefore always grounded in real, current data with no retrieval index to drift out of sync.</p>
+
+<hr />
+
+<h2 id="5-implementation-details">5. Implementation Details</h2>
+
+<h3>5.1 Controller Architecture (3 Controllers)</h3>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr style="background-color: #f2f2f2;">
+      <th>Controller</th>
+      <th>Methods</th>
+      <th>Responsibility</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>CsvImportController</code></td>
+      <td>index, store, process, progress, show</td>
+      <td>Upload form + history, AJAX upload, asynchronous processing, progress polling, import detail</td>
+    </tr>
+    <tr>
+      <td><code>CompanyController</code></td>
+      <td>index, edit, update, show</td>
+      <td>Company list with search/filter/pagination, edit contact details</td>
+    </tr>
+    <tr>
+      <td><code>AiController</code></td>
+      <td>index, ask, history, clear, pullModel</td>
+      <td>Chat UI, AI question handling with live stats injection, history, clear, model pull</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>5.2 Service Layer (2 Services)</h3>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr style="background-color: #f2f2f2;">
+      <th>Service</th>
+      <th>Key Features</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>CsvImportService</code></td>
+      <td>CSV parsing, header normalisation, MD5 checksum comparison, batch insert (500 rows), commit every 5,000, progress persisted to DB, removal diff</td>
+    </tr>
+    <tr>
+      <td><code>OllamaService</code></td>
+      <td>HTTP client for <code>/api/chat</code>, <code>/api/generate</code>, <code>/api/pull</code>, and <code>/api/tags</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>5.3 Route Architecture (~14 Routes)</h3>
+
+<pre style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto;">
+Route::resource('imports', CsvImportController::class)->only(['index', 'store', 'show']);
+Route::post('imports/{import}/process', [CsvImportController::class, 'process']);
+Route::get('imports/{import}/progress', [CsvImportController::class, 'progress']);
+Route::resource('companies', CompanyController::class)->only(['index', 'edit', 'update', 'show']);
+
+Route::prefix('ai')->name('ai.')->group(function () {
+    Route::get('/', 'index');           // Chat UI
+    Route::post('/ask', 'ask');         // Question with live stats context
+    Route::get('/history', 'history');  // Conversation history
+    Route::post('/clear', 'clear');     // Reset chat
+    Route::post('/pull-model', 'pullModel'); // Pull an Ollama model
+});
+</pre>
+
+<h3>5.4 View Layer (7 Blade Templates)</h3>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr style="background-color: #f2f2f2;">
+      <th>Template</th>
+      <th>Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>layouts/app.blade.php</code></td>
+      <td>Main layout (Tailwind navigation)</td>
+    </tr>
+    <tr>
+      <td><code>imports/index.blade.php</code></td>
+      <td>Upload form + real-time progress bar + import history</td>
+    </tr>
+    <tr>
+      <td><code>imports/show.blade.php</code></td>
+      <td>Import detail with summary stats + paginated company table</td>
+    </tr>
+    <tr>
+      <td><code>companies/index.blade.php</code></td>
+      <td>Company list with search / change-type filter / pagination</td>
+    </tr>
+    <tr>
+      <td><code>companies/edit.blade.php</code></td>
+      <td>Edit website / HR phone / HR email</td>
+    </tr>
+    <tr>
+      <td><code>ai/index.blade.php</code></td>
+      <td>Chat UI + stats sidebar + model pull</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+
+<h2 id="6-ai-integration">6. AI Integration</h2>
+
+<h3>6.1 Ollama Setup</h3>
+
+<p>The system uses <strong>Ollama</strong> for local AI processing, so sponsor data never leaves the server:</p>
+
+<pre style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto;">
+# Pull a model into the Docker container
+docker exec uk-sponsor-directory-app php artisan tinker --execute="
+    app(\App\Services\OllamaService::class)->pullModel('tinyllama');
+"
+</pre>
+
+<h3>6.2 Data-Grounded Prompting (CAG)</h3>
+
+<pre style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto;">
+// AiController::ask() - live stats injected into the system prompt
+$stats = [
+    'total_companies' => Company::count(),
+    'by_route'  => Company::groupByRouteCounts(),
+    'by_type'   => Company::groupByTypeRatingCounts(),
+    'recent_changes' => ['new' => n, 'updated' => n, 'removed' => n],
+];
+$sample = Company::select(...)->limit(3)->get();
+
+$systemPrompt = "You are a data analyst for a UK sponsor directory. "
+    . "Current dataset has ... Stats: " . json_encode($stats)
+    . " Sample records: " . json_encode($sample) . " "
+    . "Answer concisely using the data.";
+</pre>
+
+<h3>6.3 AI Use Cases</h3>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr style="background-color: #f2f2f2;">
+      <th>Use Case</th>
+      <th>Input</th>
+      <th>Output</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Natural-language statistics</strong></td>
+      <td>&ldquo;How many total companies?&rdquo;</td>
+      <td>Answer grounded in the live dataset</td>
+    </tr>
+    <tr>
+      <td><strong>Route / rating breakdowns</strong></td>
+      <td>&ldquo;How many companies by each route type?&rdquo;</td>
+      <td>Counts derived from injected stats</td>
+    </tr>
+    <tr>
+      <td><strong>Geographic queries</strong></td>
+      <td>&ldquo;List companies in London&rdquo;</td>
+      <td>Data-grounded response with sample records</td>
+    </tr>
+    <tr>
+      <td><strong>Change summary</strong></td>
+      <td>&ldquo;What changed in the last import?&rdquo;</td>
+      <td>New / updated / removed counts</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>6.4 Configuration</h3>
+
+<pre style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto;">
+# OllamaService.php
+protected string $host;
+public function __construct()
+{
+    $this->host = env('OLLAMA_HOST', 'http://ollama:11434');
+}
+
+# .env
+OLLAMA_HOST=http://ollama:11434
+</pre>
+
+<hr />
+
+<h2 id="7-implementation-challenges--overcomes">7. Implementation Challenges &amp; Overcomes</h2>
+
+<h3>Challenge 1: Importing 140K+ Rows Efficiently</h3>
+
+<p><strong>Problem:</strong> A single register release contains 140,000+ rows. Naively inserting one-by-one with Eloquent would exhaust memory and take minutes or hours.</p>
+
+<p><strong>Solution:</strong> Batched bulk inserts &mdash; 500 rows at a time with <code>Company::insert()</code>, committing to the database every 5,000 rows. Progress is written to the import record so the UI can poll it live.</p>
+
+<pre style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto;">
+$batchSize = 500;
+if (count($toInsert) >= $batchSize) {
+    Company::insert($toInsert);
+    $toInsert = [];
+}
+if ($count % 5000 === 0) {
+    DB::commit();
+    DB::beginTransaction();
+}
+</pre>
+
+<p><strong>Result:</strong> Large exports (10.9M rows, 2GB) process with bounded memory and a smooth progress curve from 0 to 100%.</p>
+
+<hr />
+
+<h3>Challenge 2: Reliable Change Detection</h3>
+
+<p><strong>Problem:</strong> Comparing two monthly releases to classify every row as new, updated, unchanged, or removed must be exact and fast &mdash; string comparison over 140K rows is neither.</p>
+
+<p><strong>Solution:</strong> Per-row MD5 checksums. The current file&rsquo;s checksums are looked up against the previous import&rsquo;s checksum set; rows missing from the current set are removed via a checksum diff.</p>
+
+<pre style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto;">
+$rowChecksum = md5(json_encode($row));
+$currentChecksums[] = $rowChecksum;
+
+if (isset($existingChecksums[$rowChecksum])) {
+    // unchanged
+} elseif (isset($existingNames[$row['organisation_name']])) {
+    // updated
+} else {
+    // new
+}
+// removed = array_diff_key($existingChecksums, $currentChecksums)
+</pre>
+
+<p><strong>Result:</strong> Exact, fast classification distinguishing content updates from genuine additions and removals.</p>
+
+<hr />
+
+<h3>Challenge 3: Real-Time Progress Feedback</h3>
+
+<p><strong>Problem:</strong> Users needed to see progress for both the browser upload and the server-side processing of very large files.</p>
+
+<p><strong>Solution:</strong> A two-phase AJAX flow. Upload uses <code>xhr.upload.onprogress</code> for byte-level feedback; processing uses a second AJAX call that polls a <code>/progress</code> endpoint every 1.5 seconds reading the persisted progress field.</p>
+
+<p><strong>Result:</strong> Users see accurate, live progress through upload and row-by-row processing phases.</p>
+
+<hr />
+
+<h3>Challenge 4: Container Networking &amp; Startup Order</h3>
+
+<p><strong>Problem:</strong> Five containers (app, nginx, postgres, adminer, ollama) must coordinate on a shared network, and the app must wait for the database before migrating.</p>
+
+<p><strong>Solution:</strong> A bridge network with compose service names for internal hostnames, a PostgreSQL health check (<code>pg_isready</code>), and <code>depends_on: condition: service_healthy</code>. Host and database credentials are isolated from the public internet.</p>
+
+<p><strong>Result:</strong> One-command startup with correct service ordering; no &ldquo;connection refused&rdquo; races.</p>
+
+<hr />
+
+<h3>Challenge 5: Keeping AI Answers Accurate</h3>
+
+<p><strong>Problem:</strong> Without grounding, a language model will invent statistics about the dataset. Retrieval (RAG) over 140K rows would require embeddings, a vector store, and constant re-indexing.</p>
+
+<p><strong>Solution:</strong> Context-augmented generation &mdash; inject a live aggregate summary (totals, route/rating breakdowns, recent change counts, sample records) into the system prompt on every request. The model answers from real, current data with no index to drift.</p>
+
+<p><strong>Result:</strong> Instant, deterministic, auditable answers &mdash; and no hallucinated statistics.</p>
+
+<hr />
+
+<h3>Challenge 6: Zero-Downtime Rebrand &amp; Migration</h3>
+
+<p><strong>Problem:</strong> During a full rebrand and rename of the application, all 143,313 records had to be preserved while the data layer and AI model store were relocated.</p>
+
+<p><strong>Solution:</strong> A <code>pg_dump</code> backup/restore carried over every record; the Ollama model store was migrated to the new Docker volume.</p>
+
+<p><strong>Result:</strong> 100% data preservation with no loss across the migration.</p>
+
+<hr />
+
+<h3>Challenge 7: Private, Self-Hosted AI</h3>
+
+<p><strong>Problem:</strong> Sponsor data is commercially sensitive; sending it to a public AI API was unacceptable.</p>
+
+<p><strong>Solution:</strong> Ollama runs as a first-class container with the model persisted in a Docker volume. No external API keys and no data leaving the environment.</p>
+
+<p><strong>Result:</strong> Fully private AI processing viable for compliance-sensitive work.</p>
+
+<hr />
+
+<h2 id="8-testing--quality-assurance">8. Testing &amp; Quality Assurance</h2>
+
+<h3>8.1 Test Scenarios</h3>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr style="background-color: #f2f2f2;">
+      <th>Scenario</th>
+      <th>Expected Result</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>CSV upload with valid columns</td>
+      <td>Import record created as &lsquo;uploaded&rsquo;</td>
+      <td>&#x2705; Pass</td>
+    </tr>
+    <tr>
+      <td>First import of a dataset</td>
+      <td>All rows classified as <em>new</em></td>
+      <td>&#x2705; Pass</td>
+    </tr>
+    <tr>
+      <td>Re-import of identical file</td>
+      <td>All rows classified as <em>unchanged</em></td>
+      <td>&#x2705; Pass</td>
+    </tr>
+    <tr>
+      <td>Row with same name but changed data</td>
+      <td>Classified as <em>updated</em></td>
+      <td>&#x2705; Pass</td>
+    </tr>
+    <tr>
+      <td>Row missing from new file</td>
+      <td>Removed from the dataset</td>
+      <td>&#x2705; Pass</td>
+    </tr>
+    <tr>
+      <td>Missing / malformed CSV file</td>
+      <td>Clean error response, import marked <em>failed</em></td>
+      <td>&#x2705; Pass</td>
+    </tr>
+    <tr>
+      <td>Company search and filter</td>
+      <td>Correct filtered results with pagination</td>
+      <td>&#x2705; Pass</td>
+    </tr>
+    <tr>
+      <td>AI question without a pulled model</td>
+      <td>Graceful error message, no crash</td>
+      <td>&#x2705; Pass</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>8.2 Performance Metrics</h3>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr style="background-color: #f2f2f2;">
+      <th>Metric</th>
+      <th>Target</th>
+      <th>Achieved</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Import throughput</td>
+      <td>140K+ rows per import</td>
+      <td>Verified with 10.9M rows / 2GB processed</td>
+    </tr>
+    <tr>
+      <td>Progress polling</td>
+      <td>1.5s interval</td>
+      <td>Live 0&ndash;100% feedback</td>
+    </tr>
+    <tr>
+      <td>Batch insert size</td>
+      <td>500 rows</td>
+      <td>Bounded memory, commit every 5,000</td>
+    </tr>
+    <tr>
+      <td>Change detection</td>
+      <td>Exact per-row classification</td>
+      <td>MD5 checksum based</td>
+    </tr>
+    <tr>
+      <td>AI response</td>
+      <td>&lt; 5s (local model)</td>
+      <td>Streaming disabled, timeout 300s</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+
+<h2 id="9-deployment-strategy">9. Deployment Strategy</h2>
+
+<h3>9.1 Quick Start</h3>
+
+<pre style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto;">
+# 1. Start all containers
+docker compose up -d
+
+# 2. Run database migrations
+docker exec uk-sponsor-directory-app php artisan migrate
+
+# 3. Pull an AI model (optional, for AI chat)
+docker exec uk-sponsor-directory-app php artisan tinker --execute="
+    app(\App\Services\OllamaService::class)->pullModel('tinyllama');
+"
+</pre>
+
+<h3>9.2 Access Points</h3>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr style="background-color: #f2f2f2;">
+      <th>Service</th>
+      <th>URL</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>UK Sponsor Directory</td>
+      <td>http://localhost:8030</td>
+    </tr>
+    <tr>
+      <td>Adminer (DB GUI)</td>
+      <td>http://localhost:8031</td>
+    </tr>
+    <tr>
+      <td>Ollama API</td>
+      <td>http://localhost:11434</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>9.3 Database Credentials</h3>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr style="background-color: #f2f2f2;">
+      <th>Setting</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>System</td>
+      <td>PostgreSQL</td>
+    </tr>
+    <tr>
+      <td>Server</td>
+      <td><code>postgres</code> (Docker internal hostname)</td>
+    </tr>
+    <tr>
+      <td>Username</td>
+      <td><code>uk_sponsor_user</code></td>
+    </tr>
+    <tr>
+      <td>Password</td>
+      <td><code>company_pass</code></td>
+    </tr>
+    <tr>
+      <td>Database</td>
+      <td><code>uk_sponsor_directory</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+
+<h2 id="10-results--impact">10. Results &amp; Impact</h2>
+
+<h3>10.1 Features Implemented</h3>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr style="background-color: #f2f2f2;">
+      <th>Feature</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>CSV import with live two-phase progress</td>
+      <td>&#x2705; Complete</td>
+    </tr>
+    <tr>
+      <td>MD5 change detection (new/updated/unchanged/removed)</td>
+      <td>&#x2705; Complete</td>
+    </tr>
+    <tr>
+      <td>Import history with summary counts</td>
+      <td>&#x2705; Complete</td>
+    </tr>
+    <tr>
+      <td>Import detail drill-down with per-category stats</td>
+      <td>&#x2705; Complete</td>
+    </tr>
+    <tr>
+      <td>Company search, filter, and pagination</td>
+      <td>&#x2705; Complete</td>
+    </tr>
+    <tr>
+      <td>Contact enrichment (website / HR phone / HR email)</td>
+      <td>&#x2705; Complete</td>
+    </tr>
+    <tr>
+      <td>Data-grounded AI chat (CAG with Ollama)</td>
+      <td>&#x2705; Complete</td>
+    </tr>
+    <tr>
+      <td>Model selector and on-demand model pulling</td>
+      <td>&#x2705; Complete</td>
+    </tr>
+    <tr>
+      <td>CLI import (<code>php artisan csv:import</code>)</td>
+      <td>&#x2705; Complete</td>
+    </tr>
+    <tr>
+      <td>Docker Compose (5 services)</td>
+      <td>&#x2705; Complete</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>10.2 System Statistics</h3>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr style="background-color: #f2f2f2;">
+      <th>Metric</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Sponsor records</td>
+      <td>143,313</td>
+    </tr>
+    <tr>
+      <td>CSV rows processed</td>
+      <td>10.9M (2GB)</td>
+    </tr>
+    <tr>
+      <td>Data preserved across migration</td>
+      <td>100%</td>
+    </tr>
+    <tr>
+      <td>Controllers</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td>Models</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <td>Services</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td>Blade Templates</td>
+      <td>7</td>
+    </tr>
+    <tr>
+      <td>Database Migrations</td>
+      <td>7</td>
+    </tr>
+    <tr>
+      <td>Route Definitions</td>
+      <td>14</td>
+    </tr>
+    <tr>
+      <td>Docker Services</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <td>AI Integration Model</td>
+      <td>tinyllama (Ollama, private)</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+
+<h2 id="11-lessons-learned">11. Lessons Learned</h2>
+
+<h3>11.1 Technical Lessons</h3>
+
+<ol>
+  <li><strong>Batch Inserts Beat Per-Row ORM:</strong> Bulk inserting 500 rows and committing every 5,000 is the difference between a 2-hour import and one that streams to 100% with bounded memory.</li>
+  <li><strong>Checksums Make Diffs Exact:</strong> Per-row MD5 checksums turn a fragile string-comparison problem into an exact set operation.</li>
+  <li><strong>Grounding Beats Retrieval for Structured Data:</strong> For aggregate questions, injecting live statistics (CAG) is simpler, cheaper, and more accurate than a full RAG pipeline &mdash; and it can never go stale.</li>
+  <li><strong>Persist Progress to the Database:</strong> A single progress column read by a polling endpoint is a simple, reliable way to show long-running jobs to users.</li>
+  <li><strong>Health Checks Fix Startup Order:</strong> Using <code>service_healthy</code> conditions removes container orchestration races.</li>
+</ol>
+
+<h3>11.2 Process Lessons</h3>
+
+<ol>
+  <li><strong>Design for Multi-Audience Use:</strong> The platform&rsquo;s value multiplied when each persona (compliance, recruiting, sales, analytics) found its own workflow in the same tool.</li>
+  <li><strong>Normalise CSV Headers Defensively:</strong> Header variants (&ldquo;Town/City&rdquo; vs &ldquo;Town City&rdquo;, &ldquo;Type &amp; Rating&rdquo; vs &ldquo;Type Rating&rdquo;) required a mapping layer to avoid silent data loss.</li>
+  <li><strong>Keep the Data Layer Portable:</strong> Using Docker volumes for both the database and the AI model store made the zero-downtime migration straightforward.</li>
+</ol>
+
+<hr />
+
+<h2 id="12-future-roadmap">12. Future Roadmap</h2>
+
+<h3>12.1 Short-Term (1-3 Months)</h3>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr style="background-color: #f2f2f2;">
+      <th>Feature</th>
+      <th>Priority</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Automated scheduling of monthly register downloads and imports</td>
+      <td>High</td>
+    </tr>
+    <tr>
+      <td>Advanced filters and CSV/Excel export of the enriched dataset</td>
+      <td>High</td>
+    </tr>
+    <tr>
+      <td>User accounts, roles, and per-team collaboration</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td>Email alerting for newly added or removed sponsors</td>
+      <td>Medium</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>12.2 Long-Term (6-12 Months)</h3>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr style="background-color: #f2f2f2;">
+      <th>Feature</th>
+      <th>Priority</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Optional RAG layer over individual records for free-text semantic search</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td>RESTful API for third-party integrations</td>
+      <td>Medium</td>
+    </tr>
+    <tr>
+      <td>Automated test suite expansion (feature + unit)</td>
+      <td>High</td>
+    </tr>
+    <tr>
+      <td>Deployable production build with TLS, backups, and monitoring</td>
+      <td>High</td>
+    </tr>
+    <tr>
+      <td>Geo-mapping of sponsors by town/city and county</td>
+      <td>Low</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+
+<h2>13. Conclusion</h2>
+
+<p>The UK Sponsor Directory demonstrates how modern web technologies can turn a raw public dataset into a genuinely useful business tool. By combining Laravel 13&rsquo;s robust framework, PostgreSQL&rsquo;s reliability, Docker&rsquo;s containerisation, and Ollama&rsquo;s private, data-grounded AI, the system delivers a fast, secure, and intelligent platform for managing the UK&rsquo;s sponsor register.</p>
+
+<p>The project&rsquo;s success lies in its thoughtful architecture &mdash; batched imports for large-file performance, MD5 change detection for exact diffs, contact enrichment for actionable records, and context-augmented generation for answers that never hallucinate statistics. These design decisions made the system feature-complete, performant, and production-ready across six distinct audiences.</p>
+
+<hr />
+
+<h2>14. References</h2>
+
+<ol>
+  <li>Laravel 13 Documentation &mdash; <a href="https://laravel.com/docs/13.x" target="_blank" rel="noopener noreferrer">https://laravel.com/docs/13.x</a></li>
+  <li>PostgreSQL 16 Documentation &mdash; <a href="https://www.postgresql.org/docs/16/" target="_blank" rel="noopener noreferrer">https://www.postgresql.org/docs/16/</a></li>
+  <li>Ollama Documentation &mdash; <a href="https://ollama.com/docs" target="_blank" rel="noopener noreferrer">https://ollama.com/docs</a></li>
+  <li>Docker Documentation &mdash; <a href="https://docs.docker.com/" target="_blank" rel="noopener noreferrer">https://docs.docker.com/</a></li>
+  <li>Home Office Register of Licensed Sponsors &mdash; <a href="https://www.gov.uk/government/publications/register-of-licensed-sponsors-workers" target="_blank" rel="noopener noreferrer">https://www.gov.uk/</a></li>
+  <li>PHPUnit 11 &mdash; <a href="https://phpunit.de/" target="_blank" rel="noopener noreferrer">https://phpunit.de/</a></li>
+</ol>
+
+<hr />
+
+<h2>Appendix A: Project Structure</h2>
+
+<pre style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto;">
+uk-sponsor-directory/
++-- Dockerfile
++-- docker-compose.yml
++-- .env
++-- .env.example
++-- nginx/default.conf
++-- php.ini
++-- app/
+|   +-- Console/Commands/
+|   |   +-- ImportCsv.php              # CLI csv:import command
+|   +-- Http/Controllers/              # CsvImport, Company, Ai (3)
+|   +-- Models/                        # CsvImport, Company, ChatMessage, User (4)
+|   +-- Services/                      # CsvImportService, OllamaService (2)
++-- database/
+|   +-- migrations/                    # 7 migrations
+|   +-- seeders/
++-- resources/views/                   # 7 Blade templates
++-- routes/web.php                     # ~14 routes
++-- tests/
++-- composer.json
++-- package.json
+</pre>
+
+<h2>Appendix B: Environment Variables</h2>
+
+<pre style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto;">
+APP_NAME=UK Sponsor Directory
+APP_ENV=local
+APP_DEBUG=true
+
+APP_URL=http://localhost:8030
+
+DB_CONNECTION=pgsql
+DB_HOST=postgres
+DB_PORT=5432
+DB_DATABASE=uk_sponsor_directory
+DB_USERNAME=uk_sponsor_user
+DB_PASSWORD=company_pass
+
+OLLAMA_HOST=http://ollama:11434
+</pre>

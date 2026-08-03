@@ -1,6 +1,22 @@
 # UK Sponsor Directory
 
+<p align="center">
+  <img alt="PHP" src="https://img.shields.io/badge/PHP-8.5-777BB4?style=for-the-badge&logo=php&logoColor=white">
+  <img alt="Laravel" src="https://img.shields.io/badge/Laravel-13-FF2D20?style=for-the-badge&logo=laravel&logoColor=white">
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white">
+  <img alt="Tailwind CSS" src="https://img.shields.io/badge/Tailwind_CSS-38BDF8?style=for-the-badge&logo=tailwindcss&logoColor=white">
+  <img alt="Docker" src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white">
+  <img alt="Nginx" src="https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white">
+  <img alt="Ollama" src="https://img.shields.io/badge/Ollama-000000?style=for-the-badge&logo=ollama&logoColor=white">
+</p>
+
 A Laravel application for importing, managing, and analyzing UK sponsor CSV data with AI-powered chat. Compares CSV imports to detect new, updated, removed, and unchanged records.
+
+## Screenshots
+
+| Companies | CSV Import | Import Result | AI Chat |
+|:---------:|:----------:|:-------------:|:-------:|
+| <img src="screenshots/Companies.png" width="100%"> | <img src="screenshots/CSV_Import.png" width="100%"> | <img src="screenshots/Import_Result.png" width="100%"> | <img src="screenshots/AI_Chat.png" width="100%"> |
 
 ## Features
 
