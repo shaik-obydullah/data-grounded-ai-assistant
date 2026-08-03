@@ -40,7 +40,7 @@ class AiController extends Controller
                 'session_id' => 'required|string',
             ]);
 
-            $model = $request->input('model', 'llama3.2');
+            $model = $request->input('model', 'tinyllama');
             $sessionId = $request->session_id;
 
             $userMessage = ChatMessage::create([
@@ -72,7 +72,7 @@ class AiController extends Controller
                 ->get()
                 ->toArray();
 
-            $systemPrompt = "You are a data analyst for a UK company directory. "
+            $systemPrompt = "You are a data analyst for a UK sponsor directory. "
                 . "Current dataset has " . number_format($stats['total_companies']) . " companies. "
                 . "Stats: " . json_encode($stats) . ". "
                 . "Sample records: " . json_encode($sample) . ". "

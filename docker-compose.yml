@@ -1,17 +1,17 @@
-name: company_directory
+name: uk-sponsor-directory
 
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: company_directory_app
+    container_name: uk-sponsor-directory-app
     restart: unless-stopped
     volumes:
       - .:/var/www
       - ./php.ini:/usr/local/etc/php/conf.d/company.ini
     networks:
-      - company_directory_network
+      - uk-sponsor-directory-network
     depends_on:
       postgres:
         condition: service_healthy
@@ -21,14 +21,14 @@ services:
       - DB_CONNECTION=pgsql
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_DATABASE=company_directory
-      - DB_USERNAME=company_user
+      - DB_DATABASE=uk_sponsor_directory
+      - DB_USERNAME=uk_sponsor_user
       - DB_PASSWORD=company_pass
       - OLLAMA_HOST=http://ollama:11434
 
   nginx:
     image: nginx:alpine
-    container_name: company_directory_nginx
+    container_name: uk-sponsor-directory-nginx
     restart: unless-stopped
     ports:
       - "8030:80"
@@ -36,54 +36,54 @@ services:
       - .:/var/www
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
     networks:
-      - company_directory_network
+      - uk-sponsor-directory-network
     depends_on:
       - app
 
   postgres:
     image: postgres:16
-    container_name: company_directory_postgres
+    container_name: uk-sponsor-directory-postgres
     restart: unless-stopped
     environment:
-      - POSTGRES_DB=company_directory
-      - POSTGRES_USER=company_user
+      - POSTGRES_DB=uk_sponsor_directory
+      - POSTGRES_USER=uk_sponsor_user
       - POSTGRES_PASSWORD=company_pass
     ports:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - company_directory_network
+      - uk-sponsor-directory-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U company_user -d company_directory"]
+      test: ["CMD-SHELL", "pg_isready -U uk_sponsor_user -d uk_sponsor_directory"]
       interval: 5s
       timeout: 5s
       retries: 5
 
   adminer:
     image: adminer:latest
-    container_name: company_directory_adminer
+    container_name: uk-sponsor-directory-adminer
     restart: unless-stopped
     ports:
       - "8031:8080"
     networks:
-      - company_directory_network
+      - uk-sponsor-directory-network
     depends_on:
       - postgres
 
   ollama:
     image: ollama/ollama:latest
-    container_name: company_directory_ollama
+    container_name: uk-sponsor-directory-ollama
     restart: unless-stopped
     ports:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
     networks:
-      - company_directory_network
+      - uk-sponsor-directory-network
 
 networks:
-  company_directory_network:
+  uk-sponsor-directory-network:
     driver: bridge
 
 volumes:

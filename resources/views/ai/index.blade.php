@@ -11,9 +11,8 @@
             <div class="flex items-center gap-2">
                 <select id="modelSelect" class="border rounded px-2 py-1 text-sm">
                     @foreach($models as $m)
-                    <option value="{{ $m['name'] }}">{{ $m['name'] }}</option>
+                    <option value="{{ $m['name'] }}" @if($loop->first) selected @endif>{{ $m['name'] }}</option>
                     @endforeach
-                    <option value="llama3.2" selected>llama3.2</option>
                 </select>
                 <form action="{{ route('ai.clear') }}" method="POST" class="inline">
                     @csrf
@@ -70,7 +69,7 @@
             <h3 class="font-bold text-sm mb-3">Pull Model</h3>
             <form action="{{ route('ai.pull-model') }}" method="POST" class="space-y-2">
                 @csrf
-                <input type="text" name="model" placeholder="llama3.2" required
+                <input type="text" name="model" placeholder="tinyllama" required
                        class="w-full border rounded px-2 py-1.5 text-sm">
                 <button type="submit" class="w-full bg-green-600 text-white rounded px-3 py-1.5 text-sm hover:bg-green-700">Pull</button>
             </form>

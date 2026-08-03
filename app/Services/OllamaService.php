@@ -13,7 +13,7 @@ class OllamaService
         $this->host = env('OLLAMA_HOST', 'http://ollama:11434');
     }
 
-    public function ask(string $prompt, string $model = 'llama3.2'): string
+    public function ask(string $prompt, string $model = 'tinyllama'): string
     {
         $response = Http::timeout(300)->post("{$this->host}/api/generate", [
             'model' => $model,
@@ -28,7 +28,7 @@ class OllamaService
         return $response->json('response', 'No response from model');
     }
 
-    public function chat(string $systemPrompt, array $history, string $model = 'llama3.2'): string
+    public function chat(string $systemPrompt, array $history, string $model = 'tinyllama'): string
     {
         $messages = [['role' => 'system', 'content' => $systemPrompt]];
 

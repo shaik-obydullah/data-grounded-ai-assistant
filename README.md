@@ -1,6 +1,6 @@
-# Company Directory
+# UK Sponsor Directory
 
-A Laravel application for importing, managing, and analyzing company CSV data with AI-powered chat. Compares CSV imports to detect new, updated, removed, and unchanged records.
+A Laravel application for importing, managing, and analyzing UK sponsor CSV data with AI-powered chat. Compares CSV imports to detect new, updated, removed, and unchanged records.
 
 ## Features
 
@@ -24,14 +24,14 @@ A Laravel application for importing, managing, and analyzing company CSV data wi
 
 ## Architecture
 
-The application runs as four Docker containers:
+The application runs as five Docker containers:
 
 ```
-company_directory_app       — PHP-FPM (Laravel)
-company_directory_nginx     — Nginx (serves on port 8030)
-company_directory_postgres  — PostgreSQL 16 (port 5433)
-company_directory_ollama    — Ollama (LLM backend, port 11434)
-company_directory_adminer   — Adminer DB GUI (port 8031)
+uk-sponsor-directory-app       — PHP-FPM (Laravel)
+uk-sponsor-directory-nginx     — Nginx (serves on port 8030)
+uk-sponsor-directory-postgres  — PostgreSQL 16 (port 5433)
+uk-sponsor-directory-ollama    — Ollama (LLM backend, port 11434)
+uk-sponsor-directory-adminer   — Adminer DB GUI (port 8031)
 ```
 
 The CSV import flow:
@@ -59,17 +59,17 @@ Upload (AJAX + xhr.upload.onprogress)
 
 ```bash
 # Clone and navigate to the project
-cd company-directory
+cd uk-sponsor-directory
 
 # Start all containers
 docker compose up -d
 
 # Run database migrations
-docker exec company_directory_app php artisan migrate
+docker exec uk-sponsor-directory-app php artisan migrate
 
 # Pull an AI model (optional, for AI chat)
-docker exec company_directory_app php artisan tinker --execute="
-    app(\App\Services\OllamaService::class)->pullModel('llama3.2');
+docker exec uk-sponsor-directory-app php artisan tinker --execute="
+    app(\App\Services\OllamaService::class)->pullModel('tinyllama');
 "
 ```
 
@@ -79,8 +79,8 @@ The app will be available at **http://localhost:8030**.
 
 | Service | URL | Credentials |
 |---------|-----|-------------|
-| Company Directory | http://localhost:8030 | — |
-| Adminer (DB GUI) | http://localhost:8031 | System: PostgreSQL, Server: `postgres`, Username: `company_user`, Password: `company_pass`, Database: `company_directory` |
+| UK Sponsor Directory | http://localhost:8030 | — |
+| Adminer (DB GUI) | http://localhost:8031 | System: PostgreSQL, Server: `postgres`, Username: `uk_sponsor_user`, Password: `company_pass`, Database: `uk_sponsor_directory` |
 
 ### Environment
 
@@ -90,8 +90,8 @@ The `.env` file is pre-configured for Docker. Key variables:
 APP_URL=http://localhost:8030
 DB_CONNECTION=pgsql
 DB_HOST=postgres
-DB_DATABASE=company_directory
-DB_USERNAME=company_user
+DB_DATABASE=uk_sponsor_directory
+DB_USERNAME=uk_sponsor_user
 DB_PASSWORD=company_pass
 OLLAMA_HOST=http://ollama:11434
 ```
@@ -162,7 +162,7 @@ The AI receives:
 
 Use the **model selector** to switch between available Ollama models. Click **Clear** to reset the chat history.
 
-Use **Pull Model** in the sidebar to download additional models (e.g. `llama3.2`, `mistral`, `phi`).
+Use **Pull Model** in the sidebar to download the `tinyllama` model.
 
 ### Database GUI (Adminer)
 
@@ -170,9 +170,9 @@ Use **Pull Model** in the sidebar to download additional models (e.g. `llama3.2`
 2. Login with:
    - **System**: PostgreSQL
    - **Server**: `postgres` (Docker internal hostname)
-   - **Username**: `company_user`
+   - **Username**: `uk_sponsor_user`
    - **Password**: `company_pass`
-   - **Database**: `company_directory`
+   - **Database**: `uk_sponsor_directory`
 
 ## CLI Commands
 
