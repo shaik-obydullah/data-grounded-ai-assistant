@@ -72,7 +72,7 @@ class AiController extends Controller
                 ->get()
                 ->toArray();
 
-            $systemPrompt = "You are a data analyst for a UK sponsor directory. "
+            $systemPrompt = "You are a data analyst for a data grounded AI assistant. "
                 . "Current dataset has " . number_format($stats['total_companies']) . " companies. "
                 . "Stats: " . json_encode($stats) . ". "
                 . "Sample records: " . json_encode($sample) . ". "

@@ -1,4 +1,4 @@
-# UK Sponsor Directory
+# Data Grounded AI Assistant
 
 <p align="center">
   <img alt="PHP" src="https://img.shields.io/badge/PHP-8.5-777BB4?style=for-the-badge&logo=php&logoColor=white">
@@ -10,7 +10,7 @@
   <img alt="Ollama" src="https://img.shields.io/badge/Ollama-000000?style=for-the-badge&logo=ollama&logoColor=white">
 </p>
 
-A Laravel application for importing, managing, and analyzing UK sponsor CSV data with AI-powered chat. Compares CSV imports to detect new, updated, removed, and unchanged records.
+An AI-powered platform for importing, managing, and analyzing structured CSV datasets with a data-grounded AI assistant. Compares imports to detect new, updated, removed, and unchanged records, and answers natural-language questions from live dataset statistics via context-augmented generation (CAG).
 
 ## Screenshots
 
@@ -22,8 +22,8 @@ A Laravel application for importing, managing, and analyzing UK sponsor CSV data
 
 - **CSV Import with Progress** — Upload CSV files with a real-time progress bar showing upload and processing stages
 - **Change Detection** — Compares each import against the previous one; automatically classifies rows as new, updated, unchanged, or removed
-- **Company Management** — Browse, search, and filter companies; edit website, HR phone, and email contact details
-- **AI-Powered Analysis** — Chat with an Ollama-backed AI that has full context of your company data (stats, routes, ratings, sample records)
+- **Data Management** — Browse, search, and filter records; edit supplementary contact details
+- **Data-Grounded AI Assistant** — Chat with an Ollama-backed AI that answers from live dataset statistics (totals, breakdowns, recent changes, sample records)
 - **Import History** — View all past imports with summary counts and drill into individual import results
 - **CLI Import** — Import CSV files from the command line with `php artisan csv:import`
 
@@ -34,7 +34,7 @@ A Laravel application for importing, managing, and analyzing UK sponsor CSV data
 | Backend | PHP 8.5, Laravel 13 |
 | Database | PostgreSQL 16 |
 | Frontend | Blade, Tailwind CSS (CDN), vanilla JS |
-| AI | Ollama (runs in Docker) |
+| AI | Ollama (runs in Docker) — context-augmented generation (CAG) |
 | Web Server | Nginx |
 | Containerization | Docker + Docker Compose |
 
@@ -43,11 +43,11 @@ A Laravel application for importing, managing, and analyzing UK sponsor CSV data
 The application runs as five Docker containers:
 
 ```
-uk-sponsor-directory-app       — PHP-FPM (Laravel)
-uk-sponsor-directory-nginx     — Nginx (serves on port 8030)
-uk-sponsor-directory-postgres  — PostgreSQL 16 (port 5433)
-uk-sponsor-directory-ollama    — Ollama (LLM backend, port 11434)
-uk-sponsor-directory-adminer   — Adminer DB GUI (port 8031)
+data-grounded-ai-assistant-app       — PHP-FPM (Laravel)
+data-grounded-ai-assistant-nginx     — Nginx (serves on port 8030)
+data-grounded-ai-assistant-postgres  — PostgreSQL 16 (port 5433)
+data-grounded-ai-assistant-ollama    — Ollama (LLM backend, port 11434)
+data-grounded-ai-assistant-adminer   — Adminer DB GUI (port 8031)
 ```
 
 The CSV import flow:
@@ -75,16 +75,16 @@ Upload (AJAX + xhr.upload.onprogress)
 
 ```bash
 # Clone and navigate to the project
-cd uk-sponsor-directory
+cd data-grounded-ai-assistant
 
 # Start all containers
 docker compose up -d
 
 # Run database migrations
-docker exec uk-sponsor-directory-app php artisan migrate
+docker exec data-grounded-ai-assistant-app php artisan migrate
 
 # Pull an AI model (optional, for AI chat)
-docker exec uk-sponsor-directory-app php artisan tinker --execute="
+docker exec data-grounded-ai-assistant-app php artisan tinker --execute="
     app(\App\Services\OllamaService::class)->pullModel('tinyllama');
 "
 ```
@@ -95,8 +95,8 @@ The app will be available at **http://localhost:8030**.
 
 | Service | URL | Credentials |
 |---------|-----|-------------|
-| UK Sponsor Directory | http://localhost:8030 | — |
-| Adminer (DB GUI) | http://localhost:8031 | System: PostgreSQL, Server: `postgres`, Username: `uk_sponsor_user`, Password: `company_pass`, Database: `uk_sponsor_directory` |
+| Data Grounded AI Assistant | http://localhost:8030 | — |
+| Adminer (DB GUI) | http://localhost:8031 | System: PostgreSQL, Server: `postgres`, Username: `data_grounded_ai_user`, Password: `company_pass`, Database: `data_grounded_ai_assistant` |
 
 ### Environment
 
@@ -106,8 +106,8 @@ The `.env` file is pre-configured for Docker. Key variables:
 APP_URL=http://localhost:8030
 DB_CONNECTION=pgsql
 DB_HOST=postgres
-DB_DATABASE=uk_sponsor_directory
-DB_USERNAME=uk_sponsor_user
+DB_DATABASE=data_grounded_ai_assistant
+DB_USERNAME=data_grounded_ai_user
 DB_PASSWORD=company_pass
 OLLAMA_HOST=http://ollama:11434
 ```
@@ -139,14 +139,14 @@ OLLAMA_HOST=http://ollama:11434
   - Row not seen before → **new**
   - Rows from previous import missing in current file → **removed**
 
-### Browsing Companies
+### Browsing Data
 
 1. Navigate to **Companies** in the navigation bar
-2. Use the **search bar** to find companies by name
+2. Use the **search bar** to find records by name
 3. Use the **change type filter** to show only new, updated, removed, or unchanged records
 4. Click **Edit** on any row to update contact details
 
-### Editing Company Details
+### Editing Record Details
 
 1. From the Companies page, click **Edit** on a company row
 2. The read-only section shows the company's imported data (Town/City, County, Type & Rating, Route, Change type)
@@ -170,11 +170,13 @@ Example questions:
 - "List companies in London"
 - "What types of ratings exist?"
 
-The AI receives:
+The AI receives a live data-grounded context snapshot:
 - Total company count
 - Breakdown by route and type/rating
 - Recent changes (new, updated, removed counts)
 - 3 sample records
+
+Every answer is grounded in this real, current data via **context-augmented generation (CAG)** — no hallucinated statistics, and no retrieval index to keep in sync.
 
 Use the **model selector** to switch between available Ollama models. Click **Clear** to reset the chat history.
 
@@ -186,9 +188,9 @@ Use **Pull Model** in the sidebar to download the `tinyllama` model.
 2. Login with:
    - **System**: PostgreSQL
    - **Server**: `postgres` (Docker internal hostname)
-   - **Username**: `uk_sponsor_user`
+   - **Username**: `data_grounded_ai_user`
    - **Password**: `company_pass`
-   - **Database**: `uk_sponsor_directory`
+   - **Database**: `data_grounded_ai_assistant`
 
 ## CLI Commands
 

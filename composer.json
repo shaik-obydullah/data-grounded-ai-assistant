@@ -1,8 +1,8 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "shaik-obydullah/data-grounded-ai-assistant",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "Data Grounded AI Assistant - an AI-powered platform for importing, managing, and analysing structured datasets with change detection.",
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {

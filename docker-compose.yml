@@ -1,17 +1,17 @@
-name: uk-sponsor-directory
+name: data-grounded-ai-assistant
 
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: uk-sponsor-directory-app
+    container_name: data-grounded-ai-assistant-app
     restart: unless-stopped
     volumes:
       - .:/var/www
       - ./php.ini:/usr/local/etc/php/conf.d/company.ini
     networks:
-      - uk-sponsor-directory-network
+      - data-grounded-ai-assistant-network
     depends_on:
       postgres:
         condition: service_healthy
@@ -21,14 +21,14 @@ services:
       - DB_CONNECTION=pgsql
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_DATABASE=uk_sponsor_directory
-      - DB_USERNAME=uk_sponsor_user
+      - DB_DATABASE=data_grounded_ai_assistant
+      - DB_USERNAME=data_grounded_ai_user
       - DB_PASSWORD=company_pass
       - OLLAMA_HOST=http://ollama:11434
 
   nginx:
     image: nginx:alpine
-    container_name: uk-sponsor-directory-nginx
+    container_name: data-grounded-ai-assistant-nginx
     restart: unless-stopped
     ports:
       - "8030:80"
@@ -36,54 +36,54 @@ services:
       - .:/var/www
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
     networks:
-      - uk-sponsor-directory-network
+      - data-grounded-ai-assistant-network
     depends_on:
       - app
 
   postgres:
     image: postgres:16
-    container_name: uk-sponsor-directory-postgres
+    container_name: data-grounded-ai-assistant-postgres
     restart: unless-stopped
     environment:
-      - POSTGRES_DB=uk_sponsor_directory
-      - POSTGRES_USER=uk_sponsor_user
+      - POSTGRES_DB=data_grounded_ai_assistant
+      - POSTGRES_USER=data_grounded_ai_user
       - POSTGRES_PASSWORD=company_pass
     ports:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - uk-sponsor-directory-network
+      - data-grounded-ai-assistant-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U uk_sponsor_user -d uk_sponsor_directory"]
+      test: ["CMD-SHELL", "pg_isready -U data_grounded_ai_user -d data_grounded_ai_assistant"]
       interval: 5s
       timeout: 5s
       retries: 5
 
   adminer:
     image: adminer:latest
-    container_name: uk-sponsor-directory-adminer
+    container_name: data-grounded-ai-assistant-adminer
     restart: unless-stopped
     ports:
       - "8031:8080"
     networks:
-      - uk-sponsor-directory-network
+      - data-grounded-ai-assistant-network
     depends_on:
       - postgres
 
   ollama:
     image: ollama/ollama:latest
-    container_name: uk-sponsor-directory-ollama
+    container_name: data-grounded-ai-assistant-ollama
     restart: unless-stopped
     ports:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
     networks:
-      - uk-sponsor-directory-network
+      - data-grounded-ai-assistant-network
 
 networks:
-  uk-sponsor-directory-network:
+  data-grounded-ai-assistant-network:
     driver: bridge
 
 volumes:
